@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Wrestling Fantasy League — Demo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="styles.css" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            aew: { red: '#e10600', gold: '#f5c518', dark: '#0f0f0f', card: '#1a1a1a' }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-black text-white min-h-screen">
+  <div id="login-screen" class="min-h-screen flex items-center justify-center p-4 bg-black">
+    <div class="w-full max-w-md">
+      <div class="text-center mb-8">
+        <div class="text-4xl font-black tracking-tight mb-2">WRESTLING<span class="text-aew-red">FANTASY</span></div>
+        <p class="text-gray-400">Interactive Demo</p>
+        <p class="text-xs text-gray-600 mt-2">Sample data only — not a live league</p>
+      </div>
+      <div class="bg-black/80 rounded-2xl p-6 border border-gray-900">
+        <label class="block text-sm font-medium text-gray-300 mb-2">Enter a demo PIN</label>
+        <input id="pin-input" type="text" maxlength="10" placeholder="try: alpha" class="w-full bg-black border border-gray-700 rounded-xl px-4 py-3 text-lg text-center tracking-widest uppercase focus:outline-none focus:border-aew-red transition" autocomplete="off" />
+        <p class="text-xs text-gray-500 mt-2 text-center">Demo PINs: <span class="text-gray-400">alpha</span>, <span class="text-gray-400">bravo</span>, <span class="text-gray-400">commish</span></p>
+        <button id="login-btn" class="w-full mt-5 bg-aew-red hover:bg-red-700 text-white font-bold py-3 rounded-xl transition">Enter Demo</button>
+        <p id="login-error" class="text-red-400 text-sm text-center mt-3 hidden"></p>
+      </div>
+    </div>
+  </div>
+
+  <div id="app" class="hidden min-h-screen flex flex-col">
+    <header class="bg-black border-b border-gray-800 sticky top-0 z-50">
+      <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="font-black text-lg">WRESTLING<span class="text-aew-red">FANTASY</span></span>
+          <span class="text-xs text-gray-500 ml-1">DEMO</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <span id="user-badge" class="text-sm font-medium px-3 py-1 rounded-full bg-gray-800"></span>
+          <button id="logout-btn" class="text-xs text-gray-500 hover:text-white">Logout</button>
+        </div>
+      </div>
+    </header>
+
+    <nav class="bg-aew-card border-b border-gray-800 overflow-x-auto">
+      <div class="max-w-6xl mx-auto px-2 flex gap-1">
+        <button data-tab="standings" class="nav-btn active px-4 py-3 text-sm font-medium whitespace-nowrap">Standings</button>
+        <button data-tab="myteam" class="nav-btn px-4 py-3 text-sm font-medium whitespace-nowrap">My Team</button>
+        <button data-tab="transactions" class="nav-btn px-4 py-3 text-sm font-medium whitespace-nowrap">Transactions</button>
+        <button data-tab="rules" class="nav-btn px-4 py-3 text-sm font-medium whitespace-nowrap">Scoring</button>
+        <button data-tab="commissioner" id="commish-nav" class="nav-btn px-4 py-3 text-sm font-medium whitespace-nowrap hidden text-aew-gold">Commissioner</button>
+      </div>
+    </nav>
+
+    <main class="flex-1 max-w-6xl mx-auto w-full p-4">
+      <div class="mb-4 p-3 rounded-xl border border-yellow-600/40 bg-yellow-950/30 text-sm text-yellow-200">
+        <strong>Demo mode.</strong> Fake teams &amp; scores. Nothing is saved to a real league database.
+      </div>
+
+      <section id="tab-standings" class="tab-content">
+        <div class="grid md:grid-cols-2 gap-6">
+          <div>
+            <h2 class="text-xl font-bold text-blue-400 mb-3">Division A</h2>
+            <div id="east-standings" class="space-y-2"></div>
+          </div>
+          <div>
+            <h2 class="text-xl font-bold text-orange-400 mb-3">Division B</h2>
+            <div id="west-standings" class="space-y-2"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="tab-myteam" class="tab-content hidden">
+        <div id="my-team-content"></div>
+      </section>
+
+      <section id="tab-transactions" class="tab-content hidden">
+        <h2 class="text-xl font-bold mb-1">Transactions</h2>
+        <p class="text-sm text-gray-400 mb-4">Waiver claims &amp; league rosters (demo).</p>
+        <div class="flex gap-2 mb-6">
+          <button id="tx-tab-waivers" class="px-4 py-2 rounded-lg text-sm font-medium bg-aew-red text-white">Waiver Claims</button>
+          <button id="tx-tab-rosters" class="px-4 py-2 rounded-lg text-sm font-medium bg-gray-800 text-gray-300">League Rosters</button>
+        </div>
+        <div id="tx-waivers-panel">
+          <div class="grid md:grid-cols-2 gap-6">
+            <div>
+              <h3 class="font-semibold mb-3">Available Wrestlers</h3>
+              <div id="available-wrestlers" class="bg-aew-card rounded-xl border border-gray-800 p-3 max-h-96 overflow-y-auto space-y-1"></div>
+            </div>
+            <div>
+              <h3 class="font-semibold mb-3">Your Ranked Claim</h3>
+              <div id="claim-list" class="bg-aew-card rounded-xl border border-gray-800 p-4 min-h-[8rem]">
+                <p class="text-sm text-gray-500 text-center py-6">Click wrestlers to rank a claim</p>
+              </div>
+              <p class="text-xs text-gray-500 mt-2">Demo only — claims are not processed against a live deadline.</p>
+            </div>
+          </div>
+        </div>
+        <div id="tx-rosters-panel" class="hidden">
+          <div id="league-rosters-view" class="space-y-6"></div>
+        </div>
+      </section>
+
+      <section id="tab-rules" class="tab-content hidden">
+        <h2 class="text-xl font-bold mb-4">Sample Scoring</h2>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-gray-700">
+                <th class="text-left py-2">Action</th>
+                <th class="text-center py-2">TV</th>
+                <th class="text-center py-2">PPV</th>
+              </tr>
+            </thead>
+            <tbody id="scoring-table"></tbody>
+          </table>
+        </div>
+        <p class="text-xs text-gray-500 mt-4">In a real league, commissioners can use this preset or define custom scoring.</p>
+      </section>
+
+      <section id="tab-commissioner" class="tab-content hidden">
+        <h2 class="text-xl font-bold text-aew-gold mb-4">Commissioner Tools (Demo)</h2>
+        <div class="grid md:grid-cols-2 gap-4">
+          <div class="bg-aew-card rounded-xl border border-gray-800 p-4">
+            <h3 class="font-bold mb-2">Enter Scores</h3>
+            <p class="text-xs text-gray-500 mb-3">Type each team’s <strong>new total</strong>. Same total = red 0 on standings.</p>
+            <div id="score-inputs" class="space-y-2 max-h-64 overflow-y-auto"></div>
+            <button id="save-scores" class="w-full mt-3 bg-aew-red hover:bg-red-700 py-2 rounded-lg text-sm font-bold">Save Scores</button>
+          </div>
+          <div class="bg-aew-card rounded-xl border border-gray-800 p-4">
+            <h3 class="font-bold mb-2 text-aew-gold">Wheel of Boom</h3>
+            <p class="text-xs text-gray-500 mb-3">Demo spin — optional module in a real league.</p>
+            <div class="flex justify-center mb-3">
+              <canvas id="wheel-canvas" width="200" height="200"></canvas>
+            </div>
+            <button id="spin-wheel" class="w-full bg-aew-gold text-black font-bold py-2 rounded-lg">SPIN</button>
+            <p id="wheel-result" class="text-center mt-3 font-bold min-h-8"></p>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script src="demo.js"></script>
+</body>
+</html>
