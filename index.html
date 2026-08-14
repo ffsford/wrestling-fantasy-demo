@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Wrestling Fantasy League — Demo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="styles.css" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            aew: { red: '#e10600', gold: '#f5c518', dark: '#0f0f0f', card: '#1a1a1a' }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-black text-white min-h-screen">
+  <div id="login-screen" class="min-h-screen flex items-center justify-center p-4 bg-black">
+    <div class="w-full max-w-md">
+      <div class="text-center mb-8">
+        <img id="login-logo" src="" alt="" class="hidden mx-auto h-20 w-auto object-contain mb-3" />
+        <div id="login-league-name" class="text-4xl font-black tracking-tight mb-2">WRESTLING<span class="text-aew-red">FANTASY</span></div>
+        <p class="text-gray-400">Product Demo</p>
+        <p class="text-xs text-gray-600 mt-2">Sample data only — not a live league</p>
+      </div>
+      <div class="bg-black/80 rounded-2xl p-6 border border-gray-900">
+        <p class="text-sm text-gray-400 mb-4 text-center">Start as Commissioner to create the league, then share owner PINs.</p>
+        <label class="block text-sm font-medium text-gray-300 mb-2">Enter PIN</label>
+        <input id="pin-input" type="text" maxlength="10" minlength="5" pattern="[A-Za-z0-9]{5,10}" placeholder="commish" class="w-full bg-black border border-gray-700 rounded-xl px-4 py-3 text-lg text-center tracking-widest uppercase focus:outline-none focus:border-aew-red transition" autocomplete="off" spellcheck="false" />
+        <p class="text-[11px] text-gray-600 mt-1.5 text-center">5–10 letters or numbers only (no spaces or symbols)</p>
+        <div class="mt-3 text-xs text-gray-500 space-y-1">
+          <p><span class="text-aew-gold font-medium">commish</span> — create league, scoring, wheel, invites</p>
+          <p><span class="text-gray-400">alpha / bravo</span> — sample team owners</p>
+        </div>
+        <button id="login-btn" class="w-full mt-5 bg-aew-red hover:bg-red-700 text-white font-bold py-3 rounded-xl transition">Enter</button>
+        <p id="login-error" class="text-red-400 text-sm text-center mt-3 hidden"></p>
+      </div>
+    </div>
+  </div>
+
+  <div id="app" class="hidden min-h-screen flex flex-col">
+    <header class="bg-black border-b border-gray-800 sticky top-0 z-50">
+      <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <img id="header-logo" src="" alt="" class="hidden h-12 w-auto object-contain" />
+          <span id="header-league-name" class="font-black text-lg">WRESTLING<span class="text-aew-red">FANTASY</span></span>
+          <span class="text-xs text-gray-500 ml-1">DEMO</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <span id="user-badge" class="text-sm font-medium px-3 py-1 rounded-full bg-gray-800"></span>
+          <button id="logout-btn" class="text-xs text-gray-500 hover:text-white">Logout</button>
+        </div>
+      </div>
+    </header>
+
+    <nav class="bg-aew-card border-b border-gray-800 overflow-x-auto">
+      <div class="max-w-6xl mx-auto px-2 flex gap-1">
+        <button data-tab="standings" class="nav-btn active px-4 py-3 text-sm font-medium whitespace-nowrap">Standings</button>
+        <button data-tab="myteam" class="nav-btn px-4 py-3 text-sm font-medium whitespace-nowrap">My Team</button>
+        <button data-tab="transactions" class="nav-btn px-4 py-3 text-sm font-medium whitespace-nowrap">Transactions</button>
+        <button data-tab="draft" class="nav-btn px-4 py-3 text-sm font-medium whitespace-nowrap">Draft</button>
+        <button data-tab="rules" class="nav-btn px-4 py-3 text-sm font-medium whitespace-nowrap">Scoring</button>
+        <button data-tab="commissioner" id="commish-nav" class="nav-btn px-4 py-3 text-sm font-medium whitespace-nowrap hidden text-aew-gold">Commissioner</button>
+      </div>
+    </nav>
+
+    <main class="flex-1 max-w-6xl mx-auto w-full p-4">
+      <div class="mb-4 p-3 rounded-xl border border-yellow-600/40 bg-yellow-950/30 text-sm text-yellow-200">
+        <strong>Demo mode.</strong> Branding, scoring, wheel, pool &amp; logos save in this browser only. No live database.
+      </div>
+
+      <section id="tab-standings" class="tab-content">
+        <div class="grid md:grid-cols-2 gap-6">
+          <div>
+            <h2 id="div-a-title" class="text-xl font-bold text-blue-400 mb-3">Division A</h2>
+            <div id="east-standings" class="space-y-2"></div>
+          </div>
+          <div>
+            <h2 id="div-b-title" class="text-xl font-bold text-orange-400 mb-3">Division B</h2>
+            <div id="west-standings" class="space-y-2"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="tab-myteam" class="tab-content hidden">
+        <div id="my-team-content"></div>
+        <div id="my-team-logo-card" class="mt-6 bg-aew-card rounded-xl border border-gray-800 p-4 max-w-md hidden">
+          <h3 class="font-semibold mb-2">Your team logo</h3>
+          <p class="text-[11px] text-gray-500 mb-3">Square PNG/WebP, 256×256 recommended, under 500 KB. Only you control this.</p>
+          <div class="flex items-center gap-3 mb-3">
+            <img id="my-team-logo-preview" class="hidden h-14 w-14 rounded object-cover border border-gray-700" />
+            <div id="my-team-logo-placeholder" class="h-14 w-14 rounded bg-gray-800 flex items-center justify-center text-xs text-gray-500">—</div>
+          </div>
+          <input id="my-team-logo-input" type="file" accept="image/png,image/jpeg,image/webp" class="block w-full text-sm text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-gray-700 file:text-white" />
+          <div class="flex gap-2 mt-3">
+            <button id="my-team-logo-save" class="bg-aew-red hover:bg-red-700 text-white font-bold px-4 py-2 rounded-lg text-sm">Save logo</button>
+            <button id="my-team-logo-clear" class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg text-sm">Remove</button>
+          </div>
+          <p id="my-team-logo-msg" class="text-sm mt-2"></p>
+        </div>
+      </section>
+
+      <section id="tab-transactions" class="tab-content hidden">
+        <h2 class="text-xl font-bold mb-1">Transactions</h2>
+        <p class="text-sm text-gray-400 mb-4">Waiver claims &amp; league rosters (demo).</p>
+        <div class="flex gap-2 mb-6">
+          <button id="tx-tab-waivers" class="px-4 py-2 rounded-lg text-sm font-medium bg-aew-red text-white">Waiver Claims</button>
+          <button id="tx-tab-rosters" class="px-4 py-2 rounded-lg text-sm font-medium bg-gray-800 text-gray-300">League Rosters</button>
+        </div>
+        <div id="tx-waivers-panel">
+          <div class="grid md:grid-cols-2 gap-6">
+            <div>
+              <h3 class="font-semibold mb-3">Available Wrestlers</h3>
+              <div id="available-wrestlers" class="bg-aew-card rounded-xl border border-gray-800 p-3 max-h-96 overflow-y-auto space-y-1"></div>
+            </div>
+            <div>
+              <h3 class="font-semibold mb-3">Your Ranked Claim</h3>
+              <div id="claim-list" class="bg-aew-card rounded-xl border border-gray-800 p-4 min-h-[8rem]">
+                <p class="text-sm text-gray-500 text-center py-6">Click wrestlers to rank a claim</p>
+              </div>
+              <p class="text-xs text-gray-500 mt-2">Demo only — claims are not processed against a live deadline.</p>
+            </div>
+          </div>
+        </div>
+        <div id="tx-rosters-panel" class="hidden">
+          <div id="league-rosters-view" class="space-y-6"></div>
+        </div>
+      </section>
+
+      
+      <section id="tab-draft" class="tab-content hidden">
+        <div class="mb-4">
+          <h2 class="text-xl font-bold mb-1">Draft Room</h2>
+          <p class="text-sm text-gray-400">Demo snake draft — portraits on every available name and pick.</p>
+        </div>
+        <div id="draft-status-bar" class="bg-aew-card rounded-xl border border-gray-800 p-4 mb-4 text-sm text-gray-300">
+          Loading...
+        </div>
+        <div id="draft-pick-area" class="bg-aew-card rounded-xl border border-gray-800 p-4 mb-6"></div>
+        <h3 class="font-semibold mb-3">Draft Board</h3>
+        <div id="draft-board" class="space-y-2 text-sm"></div>
+      </section>
+
+      <section id="tab-rules" class="tab-content hidden">
+        <h2 class="text-xl font-bold mb-1">Scoring Rules</h2>
+        <p class="text-sm text-gray-400 mb-4">Current league scoring (commissioner can edit under Commissioner tools).</p>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-gray-700">
+                <th class="text-left py-2">Action</th>
+                <th class="text-center py-2">TV</th>
+                <th class="text-center py-2">PPV</th>
+              </tr>
+            </thead>
+            <tbody id="scoring-table"></tbody>
+          </table>
+        </div>
+        <p class="text-xs text-gray-500 mt-4">Commissioners load the AEW preset or build custom rows in the Commissioner tab.</p>
+      </section>
+
+      <section id="tab-commissioner" class="tab-content hidden">
+        <h2 class="text-xl font-bold text-aew-gold mb-4">Commissioner Tools (Demo)</h2>
+
+        <!-- LEAGUE SETUP -->
+        <div class="bg-aew-card rounded-xl border border-aew-gold/40 p-4 mb-6">
+          <h3 class="font-bold text-aew-gold mb-1">League Setup</h3>
+          <p class="text-xs text-gray-500 mb-4">Name, divisions, colors, and logos. Saved in this browser for the demo.</p>
+
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="space-y-3">
+              <div>
+                <label class="block text-xs text-gray-400 mb-1">League name</label>
+                <input id="setup-league-name" type="text" maxlength="40" placeholder="e.g. Friday Night Fantasy" class="w-full bg-black border border-gray-700 rounded-lg px-3 py-2 text-sm" />
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-xs text-gray-400 mb-1">Division A name</label>
+                  <input id="setup-div-a" type="text" maxlength="24" placeholder="Division A" class="w-full bg-black border border-gray-700 rounded-lg px-3 py-2 text-sm" />
+                </div>
+                <div>
+                  <label class="block text-xs text-gray-400 mb-1">Division B name</label>
+                  <input id="setup-div-b" type="text" maxlength="24" placeholder="Division B" class="w-full bg-black border border-gray-700 rounded-lg px-3 py-2 text-sm" />
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-xs text-gray-400 mb-1">Primary color</label>
+                  <input id="setup-color-primary" type="color" value="#e10600" class="w-full h-10 bg-black border border-gray-700 rounded-lg cursor-pointer" />
+                </div>
+                <div>
+                  <label class="block text-xs text-gray-400 mb-1">Accent / gold</label>
+                  <input id="setup-color-accent" type="color" value="#f5c518" class="w-full h-10 bg-black border border-gray-700 rounded-lg cursor-pointer" />
+                </div>
+              </div>
+            </div>
+
+            <div class="space-y-3">
+              <div>
+                <label class="block text-xs text-gray-400 mb-1">League logo</label>
+                <input id="setup-league-logo" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" class="block w-full text-sm text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-gray-700 file:text-white" />
+                <p class="text-[11px] text-gray-600 mt-1">Recommended: square or wide PNG/WebP, 512×512 or 800×400, under 1 MB</p>
+                <div class="mt-2 flex items-center gap-3">
+                  <img id="setup-league-logo-preview" class="hidden h-16 w-auto object-contain bg-black/40 rounded border border-gray-800 p-1" />
+                  <button id="setup-clear-league-logo" type="button" class="hidden text-xs text-red-400 hover:text-red-300">Remove</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <p class="text-[11px] text-gray-500 mt-2">Team logos are set by each owner on their My Team page — not by the commissioner.</p>
+
+          <button id="setup-save" class="mt-4 w-full md:w-auto bg-aew-gold text-black font-bold px-6 py-2.5 rounded-lg text-sm">Save League Setup</button>
+          <p id="setup-msg" class="text-sm mt-2"></p>
+        </div>
+
+        <!-- ROSTER POOL -->
+        <div class="bg-aew-card rounded-xl border border-gray-800 p-4 mb-6">
+          <h3 class="font-bold mb-1">Wrestler Pool</h3>
+          <p class="text-xs text-gray-500 mb-3">Upload or paste the full eligible roster. Add names anytime a promotion signs someone mid-season.</p>
+
+          <div class="grid md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs text-gray-400 mb-1">Upload CSV / text (one name per line)</label>
+              <input id="pool-csv" type="file" accept=".csv,.txt" class="block w-full text-sm text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-gray-700 file:text-white mb-2" />
+              <textarea id="pool-paste" rows="8" class="w-full bg-black border border-gray-700 rounded-lg px-3 py-2 text-sm font-mono" placeholder="One wrestler per line"></textarea>
+              <button id="pool-save" class="mt-2 w-full bg-gray-700 hover:bg-gray-600 py-2 rounded-lg text-sm font-bold">Save Pool</button>
+            </div>
+            <div>
+              <label class="block text-xs text-gray-400 mb-1">Add one wrestler</label>
+              <div class="flex gap-2 mb-4">
+                <input id="pool-add-name" type="text" placeholder="Wrestler name" class="flex-1 bg-black border border-gray-700 rounded-lg px-3 py-2 text-sm" />
+                <button id="pool-add-btn" class="bg-aew-gold text-black font-bold px-4 py-2 rounded-lg text-sm">Add</button>
+              </div>
+              <p id="pool-add-msg" class="text-sm mb-4 min-h-[1.25rem]"></p>
+
+              <label class="block text-xs text-gray-400 mb-1">Image pack</label>
+              <p class="text-[11px] text-gray-600 mb-2">Select multiple images. Filename must match the wrestler (e.g. <span class="text-gray-400">Jeff Jarrett.png</span>). Case-insensitive; extension ignored.</p>
+              <input id="pool-image-pack" type="file" accept="image/png,image/jpeg,image/webp" multiple class="block w-full text-sm text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-gray-700 file:text-white" />
+              <p id="pool-image-msg" class="text-sm mt-2 min-h-[1.25rem]"></p>
+              <p id="pool-count" class="text-xs text-gray-500 mt-3"></p>
+            </div>
+          </div>
+        </div>
+
+        <!-- TEAMS & INVITES -->
+        <div class="bg-aew-card rounded-xl border border-gray-800 p-4 mb-6">
+          <h3 class="font-bold mb-1">Teams &amp; Invites</h3>
+          <p class="text-xs text-gray-500 mb-4">Rename teams and share the PINs (5–10 letters/numbers). Email signup comes later.</p>
+          <div id="teams-invite-list" class="space-y-3"></div>
+          <p class="text-[11px] text-gray-600 mt-3">Commish PIN: <code class="bg-black px-1.5 py-0.5 rounded">commish</code> — always works for full control.</p>
+        </div>
+
+        <!-- COIN FLIP + FOREIGN OBJECT (near top so they’re easy to find) -->
+        <div class="grid md:grid-cols-2 gap-4 mb-6">
+          <div class="bg-aew-card rounded-xl border border-gray-800 p-4">
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="font-bold">Coin Flip (Waiver Tiebreakers)</h3>
+              <label class="flex items-center gap-2 text-sm cursor-pointer">
+                <input type="checkbox" id="coinflip-enabled" class="rounded border-gray-600" checked />
+                <span>Enabled</span>
+              </label>
+            </div>
+            <p class="text-xs text-gray-500 mb-3">Auto-enabled. Use for waiver wire ties. Toggle off if the league prefers another method.</p>
+            <div id="coinflip-body" class="text-center">
+              <button id="coinflip-btn" class="w-full bg-gray-700 hover:bg-gray-600 font-bold py-3 rounded-lg text-lg">FLIP COIN</button>
+              <p id="coinflip-result" class="mt-3 text-2xl font-black min-h-10"></p>
+            </div>
+          </div>
+
+          <div class="bg-aew-card rounded-xl border border-gray-800 p-4">
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="font-bold text-aew-gold">Foreign Objects</h3>
+              <label class="flex items-center gap-2 text-sm cursor-pointer">
+                <input type="checkbox" id="fo-enabled" class="rounded border-gray-600" checked />
+                <span>Enabled</span>
+              </label>
+            </div>
+            <p class="text-xs text-gray-500 mb-3">Awarded to last-place teams. Edit the list below. If an owner picks the wheel FO, commissioner spins the wheel.</p>
+            <div id="fo-list" class="space-y-3 max-h-80 overflow-y-auto text-sm mb-3"></div>
+            <div class="flex flex-wrap gap-2">
+              <button id="fo-add" class="bg-gray-700 hover:bg-gray-600 px-3 py-1.5 rounded-lg text-sm">+ Add Foreign Object</button>
+              <button id="fo-save" class="bg-aew-gold text-black font-bold px-4 py-1.5 rounded-lg text-sm">Save Foreign Objects</button>
+            </div>
+            <p id="fo-msg" class="text-sm mt-2 min-h-[1.25rem]"></p>
+          </div>
+        </div>
+
+        <!-- SCORING EDITOR -->
+        <div class="bg-aew-card rounded-xl border border-gray-800 p-4 mb-6">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-1">
+            <h3 class="font-bold">Scoring Rules</h3>
+            <button id="scoring-load-aew" class="text-xs bg-gray-700 hover:bg-gray-600 px-3 py-1.5 rounded-lg font-medium">Load AEW preset</button>
+          </div>
+          <p class="text-xs text-gray-500 mb-3">Edit TV / PPV points per action. Changes apply to the Scoring tab for all owners.</p>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="border-b border-gray-700 text-left">
+                  <th class="py-2 pr-2">Action</th>
+                  <th class="py-2 w-20 text-center">TV</th>
+                  <th class="py-2 w-20 text-center">PPV</th>
+                  <th class="py-2 w-10"></th>
+                </tr>
+              </thead>
+              <tbody id="scoring-editor-body"></tbody>
+            </table>
+          </div>
+          <div class="flex flex-wrap gap-2 mt-3">
+            <button id="scoring-add-row" class="bg-gray-700 hover:bg-gray-600 px-3 py-1.5 rounded-lg text-sm font-medium">+ Add row</button>
+            <button id="scoring-save" class="bg-aew-gold text-black font-bold px-4 py-1.5 rounded-lg text-sm">Save Scoring</button>
+          </div>
+          <p id="scoring-editor-msg" class="text-sm mt-2 min-h-[1.25rem]"></p>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-4">
+          <div class="bg-aew-card rounded-xl border border-gray-800 p-4">
+            <h3 class="font-bold mb-2">Enter Scores</h3>
+            <p class="text-xs text-gray-500 mb-3">Type each team’s <strong>new total</strong>. Same total = red 0 on standings.</p>
+            <div id="score-inputs" class="space-y-2 max-h-64 overflow-y-auto"></div>
+            <button id="save-scores" class="w-full mt-3 bg-aew-red hover:bg-red-700 py-2 rounded-lg text-sm font-bold">Save Scores</button>
+          </div>
+
+          <!-- THE WHEEL OF BOOM -->
+          <div class="bg-aew-card rounded-xl border border-gray-800 p-4">
+            <div class="flex items-center justify-between mb-2 gap-2">
+              <input id="wheel-name" type="text" maxlength="40" value="The Wheel of Boom" class="font-bold text-aew-gold bg-transparent border-b border-transparent hover:border-gray-600 focus:border-aew-gold focus:outline-none text-lg flex-1 min-w-0" />
+              <label class="flex items-center gap-2 text-sm cursor-pointer flex-shrink-0">
+                <input type="checkbox" id="wheel-enabled" class="rounded border-gray-600" />
+                <span>Enabled</span>
+              </label>
+            </div>
+            <p class="text-xs text-gray-500 mb-3">Optional scoring bonuses for those team(s) that are in last place and can use some help. Rename the wheel above if you want.</p>
+            <div id="wheel-module-body">
+              <div class="flex justify-center mb-3">
+                <canvas id="wheel-canvas" width="200" height="200"></canvas>
+              </div>
+              <button id="spin-wheel" class="w-full bg-aew-gold text-black font-bold py-2 rounded-lg mb-3">SPIN</button>
+              <p id="wheel-result" class="text-center font-bold min-h-8 mb-4"></p>
+              <h4 class="text-xs font-semibold text-gray-400 mb-2">Segments (label + color)</h4>
+              <div id="wheel-segments-editor" class="space-y-2 mb-3 max-h-48 overflow-y-auto"></div>
+              <div class="flex gap-2">
+                <button id="wheel-add-seg" class="bg-gray-700 hover:bg-gray-600 px-3 py-1.5 rounded-lg text-sm">+ Segment</button>
+                <button id="wheel-save" class="bg-aew-gold text-black font-bold px-4 py-1.5 rounded-lg text-sm">Save Wheel</button>
+              </div>
+              <p id="wheel-editor-msg" class="text-sm mt-2 min-h-[1.25rem]"></p>
+            </div>
+            <p id="wheel-disabled-note" class="text-sm text-gray-500 hidden">Wheel is currently disabled for this league.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script src="demo.js"></script>
+</body>
+</html>
