@@ -1,25 +1,32 @@
 # Wrestling Fantasy — Public Demo
 
-Sample data only. Branding is saved in the browser (localStorage).
+Sample data only. Branding, scoring, wheel config, roster pool and portraits are saved in the browser (localStorage).
+
+## Demo flow (for Jeff Jarrett pitch)
+1. Enter **`commish`** → set league name, colors, logo, scoring, wheel, pool.
+2. Rename teams under **Teams & Invites** and copy the PINs.
+3. Share owner PINs (`alpha`, `bravo`, …) so teammates can join and claim waivers / draft.
 
 ## Demo PINs
-- `alpha` / `bravo` — team owners
-- `commish` — Commissioner (League Setup + scores + Wheel)
+- `commish` — Commissioner (League Setup + Scoring editor + Wheel + Teams/Invites)
+- `alpha` / `bravo` / `charlie` / `delta` / `echo` / `foxtrot` — team owners
 
-## League Setup (Commissioner)
-- League name
-- Division A / B names
-- Primary + accent colors
-- League logo upload
-- Per-team logo uploads
+## Features ready for demo
+- League setup (name, divisions, colors, league logo)
+- Per-team logos (owner controlled)
+- Editable scoring (Load AEW preset or custom TV/PPV rows)
+- Wheel / FO module (toggle + editable segments)
+- Roster pool + image-pack matching (filename → wrestler)
+- Large portraits on My Team, waivers, draft board
+- Snake draft room
+- Score entry with +/- deltas on standings
 
 ### Image guidelines
 | Use | Recommended size | Format | Max file size |
 |-----|------------------|--------|---------------|
 | **League logo** | 512×512 (square) or 800×400 (wide) | PNG / WebP | ~1 MB |
 | **Team logos** | 256×256 square | PNG / WebP | ~500 KB |
-
-Images are resized in-browser for the demo. Stock pro-wrestling art can be added later as defaults.
+| **Wrestler portraits** | 256–512 px | PNG / WebP | ~600 KB |
 
 ## Safe to share
 No real Season 9 data or Supabase keys.
